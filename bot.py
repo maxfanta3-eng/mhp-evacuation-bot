@@ -246,7 +246,9 @@ async def process_toggle_employee(callback: CallbackQuery):
             data["last_updated_by"] = user_name
             save_data(data)
             
-            cat_info = data["categories"][cat_key]
+            # ЗАГРУЖАЕМ СВЕЖИЕ ДАННЫЕ ПРЯМО ИЗ ФАЙЛА ДЛЯ КЛАВИАТУРЫ
+            fresh_data = load_data()
+            cat_info = fresh_data["categories"][cat_key]
             
             try:
                 await callback.message.edit_text(
