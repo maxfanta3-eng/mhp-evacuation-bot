@@ -168,25 +168,33 @@ DEFAULT_DATA = {
     "last_updated_by": "Ще ніхто"
 }
 
+import os
+import json
+
+DATA_FILE = "shift_data_v3.json"
+
 def load_data():
-    if not os.path.exists(DATA_FILE):
-        save_data(DEFAULT_DATA)
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if "categories" not in data:
-                return DEFAULT_DATA
-            # Перевіряємо, чи всі категорії на місці (на випадок старого файлу json)
-            for cat_key in DEFAULT_DATA["categories"]:
-                if cat_key not in data["categories"]:
-                    data["categories"][cat_key] = DEFAULT_DATA["categories"][cat_key]
-            return data
-    except Exception:
-        return DEFAULT_DATA
+    # Якщо файл існує, спробуємо його прочитати
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if "categories" in data and "eng_op_a" in data["categories"]:
+                    return data
+        except Exception:
+            pass
+    
+    # Якщо файлу немає або він битий — повертаємо копію базових даних і одразу зберігаємо
+    data = DEFAULT_DATA.copy()
+    save_data(data)
+    return data
 
 def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    try:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Save error: {e}")
 
 def count_category(cat_data):
     present = sum(1 for status in cat_data["employees"].values() if status)
@@ -359,12 +367,12 @@ async def process_toggle_employee(callback: CallbackQuery):
                     cat_info = data["categories"][cat_key]
                     try:
                         await callback.message.edit_text(
-                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n   ",
                             reply_markup=get_category_keyboard(cat_key, cat_info),
                             parse_mode="Markdown"
                         )
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"Edit error: {e}")
         except ValueError:
             pass
     await callback.answer("Статус змінено!")
