@@ -350,34 +350,34 @@ async def process_toggle_employee(callback: CallbackQuery):
         cat_key = parts[1]
         try:
             emp_index = int(parts[2])
-            data = load_data()
-            user_name = callback.from_user.full_name
+        data = load_data()
+        user_name = callback.from_user.full_name
+        
+        if cat_key in data["categories"]:
+            employees = data["categories"][cat_key]["employees"]
+            names_list = list(employees.keys())
             
-            if cat_key in data["categories"]:
-                employees = data["categories"][cat_key]["employees"]
-                names_list = list(employees.keys())
+            if 0 <= emp_index < len(names_list):
+                name = names_list[emp_index]
+                current_status = employees[name]
+                employees[name] = not current_status
+                data["last_updated_by"] = user_name
+                save_data(data)
                 
-                if 0 <= emp_index < len(names_list):
-                    name = names_list[emp_index]
-                    current_status = employees[name]
-                    employees[name] = not current_status
-                    data["last_updated_by"] = user_name
-                    save_data(data)
-                    
-cat_info = data["categories"][cat_key]
-                    
-                    # Перезавантажуємо актуальні дані з файлу перед генерацією клавіатури
-                    fresh_data = load_data()
-                    fresh_cat_info = fresh_data["categories"][cat_key]
-                    
-                    try:
-                        await callback.message.edit_text(
-                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
-                            reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
-                            parse_mode="Markdown"
-                        )
-                    except Exception as e:
-                        print(f"Edit error: {e}")
+                cat_info = data["categories"][cat_key]
+                
+                # Перезавантажуємо актуальні дані з файлу перед генерацією клавіатури
+                fresh_data = load_data()
+                fresh_cat_info = fresh_data["categories"][cat_key]
+                
+                try:
+                    await callback.message.edit_text(
+                        f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n⏱ {time.time()}",
+                        reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
+                        parse_mode="Markdown"
+                    )
+                except Exception as e:
+                    print(f"Edit error: {e}")
         except ValueError:
             pass
     await callback.answer("Статус змінено!")
