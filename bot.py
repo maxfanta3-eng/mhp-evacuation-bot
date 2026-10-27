@@ -363,9 +363,8 @@ async def process_toggle_employee(callback: CallbackQuery):
                 data["last_updated_by"] = user_name
                 save_data(data)
                 
-           cat_info = data["categories"][cat_key]
+                cat_info = data["categories"][cat_key]
                 
-                # Завантажуємо свіжі дані для генератора клавіатури
                 fresh_data = load_data()
                 fresh_cat_info = fresh_data["categories"][cat_key]
                 
@@ -377,6 +376,11 @@ async def process_toggle_employee(callback: CallbackQuery):
                     )
                 except Exception as e:
                     print(f"Edit error: {e}")
+                    
+    try:
+        await callback.answer("Статус змінено!")
+    except Exception:
+        pass
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
