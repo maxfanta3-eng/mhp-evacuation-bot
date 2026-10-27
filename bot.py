@@ -14,12 +14,155 @@ router = Router()
 DATA_FILE = "shift_data.json"
 
 DEFAULT_DATA = {
-    "shift_data": {
-        "chief": 0,
-        "experts": 0,
-        "warehouse": 0,
-        "emergency": 0,
-        "eng_op": 0
+    "categories": {
+        "chief": {
+            "title": "👤 Керівник служби",
+            "employees": {
+                "Островий С.Р.": False
+            }
+        },
+        "experts": {
+            "title": "🛠 Техексперти",
+            "employees": {
+                "Хорольський О.В.": False,
+                "Мигулько О.О.": False,
+                "Склярук А.М.": False,
+                "Панкратьєв Є.Ю.": False,
+                "Сташко О.В.": False,
+                "Рудик Є.М.": False
+            }
+        },
+        "locksmiths": {
+            "title": "🔧 Слюсаря тех.",
+            "employees": {
+                "Забукін А.В.": False,
+                "Колпаков О.В.": False,
+                "Матюша М.М.": False,
+                "Іванін Д.В.": False,
+                "Лалак Я.А.": False,
+                "Щуренко О.М.": False,
+                "Провільський Ю.М.": False,
+                "Жаріков С.О.": False,
+                "Горобець М.М.": False,
+                "Денисюк С.П.": False,
+                "Луговий С.В.": False,
+                "Мурзак Б.Ю.": False,
+                "Дробчак М.Р.": False
+            }
+        },
+        "warehouse": {
+            "title": "🤖 Роботизований склад",
+            "employees": {
+                "Вербецький С.І.": False,
+                "Незгода А.Д.": False,
+                "Пастушенко В.С.": False,
+                "Рижавський М.П.": False,
+                "Дробчак М.Р.": False
+            }
+        },
+        "emergency": {
+            "title": "⚡ Чергові аварійники",
+            "employees": {
+                "Король А.І. інж з мех.": False,
+                "Гарник О.Г. інж ІІ": False,
+                "Коваленко М.С.": False,
+                "Олійник Ю.В. інж з мех.": False,
+                "Ладанюк С.М.": False,
+                "Петровський Д.О. інж з мех.": False,
+                "Кольцов О.Д. інж ІІ": False,
+                "Стороженко В.С.": False,
+                "Степаненко Д.А. інж з мех.": False,
+                "Мисько І.І. інж ІІ": False,
+                "Мельник В.В.": False,
+                "Чалий Ю.В.": False
+            }
+        },
+        "eng_op_a": {
+            "title": "👷 Інженера+оператори змА",
+            "employees": {
+                "Баланюк В.Ю.": False,
+                "Барков Ю.М. інж ІІ": False,
+                "Богданов О.С.": False,
+                "Боднар О.С.": False,
+                "Бугара О.О.": False,
+                "Вельган В.А.": False,
+                "Гладир М.В.": False,
+                "Головко М.О.": False,
+                "Гончарук О.М.": False,
+                "Гринчик О.В.": False,
+                "Денисюк С.В. інж ІІ": False,
+                "Диченко А.О.": False,
+                "Дремух Д.А.": False,
+                "Захаров О.С.": False,
+                "Калашнік М.С.": False,
+                "Камінський В.О.": False,
+                "Керн Н.В.": False,
+                "Кізман О.В.": False,
+                "Кульчицький В.В.": False,
+                "Лазаренко Д.В.": False,
+                "Марчук О.П.": False,
+                "Онуфрієнко О.М.": False,
+                "Полянський В.В.": False,
+                "Похилюк І.М.": False,
+                "Прибила А.С.": False,
+                "Пшеничний В.О. інж з нал.": False,
+                "Русецький С.С.": False,
+                "Русяновський Р.О.": False,
+                "Сасюк Д.Ю.": False,
+                "Томашевський О.П.": False,
+                "Торішній О.Г.": False,
+                "Федічев М.В. інж ІІ": False,
+                "Фірсов Р.І.": False,
+                "Фірсова Я.І.": False,
+                "Чухало О.О.": False,
+                "Шрамко В.С.": False,
+                "Шумілов В.М.": False
+            }
+        },
+        "eng_op_b": {
+            "title": "👷 Інженера+оператори змБ",
+            "employees": {
+                "Бондаренко М.М.": False,
+                "Боченко О.О.": False,
+                "Білоус М.В.": False,
+                "Вабст П.Л.": False,
+                "Гуцол І.Д.": False,
+                "Головащенко О.М.": False,
+                "Грушовий О.В.": False,
+                "Грицик А.В.": False,
+                "Давидюк Д.А.": False,
+                "Дубенко С.О.": False,
+                "Єпанчинцев В.В.": False,
+                "Ільїнов Д.": False,
+                "Клещ В.А. інж з нал.": False,
+                "Коваленко О.В.": False,
+                "Лаврук К.М.": False,
+                "Ліщенюк В.М.": False,
+                "Магдич О.О.": False,
+                "Малка О.М.": False,
+                "Півторак О.М.": False,
+                "Романов В.В.": False,
+                "Сердюк Д.В.": False,
+                "Склярук І.О.": False,
+                "Сірий А.С.": False,
+                "Темрієнко В.І.": False,
+                "Требенко П.М.": False,
+                "Хацько Є.В.": False,
+                "Хмарук Я.І.": False,
+                "Шумейко А.В.": False,
+                "Ясько Д.В.": False,
+                "Яремко В.Я.": False,
+                "Боднар А.С. інж ІІ": False,
+                "Лещенко В.В. інж ІІ": False,
+                "Колодій А.Г. інж ІІ": False,
+                "Цурман О.О. інж ІІ": False,
+                "Горущенко П.В.": False,
+                "Нароган С.В.": False,
+                "Паламарчук О.І.": False,
+                "Попов В.С.": False,
+                "Русс М.О.": False
+            }
+        }
     },
     "last_updated_by": "Ще ніхто"
 }
@@ -29,7 +172,10 @@ def load_data():
         save_data(DEFAULT_DATA)
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            if "categories" not in data:
+                return DEFAULT_DATA
+            return data
     except Exception:
         return DEFAULT_DATA
 
@@ -37,96 +183,130 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def get_main_keyboard(shift_data):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"👤 Керівник служби: {shift_data['chief']}", callback_data="ignore_chief")],
-        [
-            InlineKeyboardButton(text="➖", callback_data="dec_chief"),
-            InlineKeyboardButton(text="➕", callback_data="inc_chief")
-        ],
-        [InlineKeyboardButton(text=f"🛠 Техесперти + слюсаря: {shift_data['experts']}", callback_data="ignore_experts")],
-        [
-            InlineKeyboardButton(text="➖", callback_data="dec_experts"),
-            InlineKeyboardButton(text="➕", callback_data="inc_experts")
-        ],
-        [InlineKeyboardButton(text=f"🤖 Роботизований склад: {shift_data['warehouse']}", callback_data="ignore_warehouse")],
-        [
-            InlineKeyboardButton(text="➖", callback_data="dec_warehouse"),
-            InlineKeyboardButton(text="➕", callback_data="inc_warehouse")
-        ],
-        [InlineKeyboardButton(text=f"⚡ Чергові аварійники: {shift_data['emergency']}", callback_data="ignore_emergency")],
-        [
-            InlineKeyboardButton(text="➖", callback_data="dec_emergency"),
-            InlineKeyboardButton(text="➕", callback_data="inc_emergency")
-        ],
-        [InlineKeyboardButton(text=f"👷 Інженер + оператор: {shift_data['eng_op']}", callback_data="ignore_eng_op")],
-        [
-            InlineKeyboardButton(text="➖", callback_data="dec_eng_op"),
-            InlineKeyboardButton(text="➕", callback_data="inc_eng_op")
-        ],
-        [InlineKeyboardButton(text="🔄 Оновити дані", callback_data="refresh_view")]
-    ])
+def count_category(cat_data):
+    present = sum(1 for status in cat_data["employees"].values() if status)
+    total = len(cat_data["employees"])
+    return present, total
 
-def generate_status_text():
-    data = load_data()
-    shift_data = data["shift_data"]
-    total = sum(shift_data.values())
-    return (
-        f"🚨 АКТУАЛЬНИЙ СКЛАД СЛУЖБИ (ЕВАКУАЦІЯ)\n\n"
-        f"• 👤 Керівник служби: {shift_data['chief']}\n"
-        f"• 🛠 Техесперти + слюсаря: {shift_data['experts']}\n"
-        f"• 🤖 Роботизований склад: {shift_data['warehouse']}\n"
-        f"• ⚡ Чергові аварійники: {shift_data['emergency']}\n"
-        f"• 👷 Інженер + оператор: {shift_data['eng_op']}\n\n"
-        f"• 🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total} осіб\n\n"
-        f"• 🕒 *Останній оновив:* {data['last_updated_by']}"
-    )
+def get_main_keyboard(data):
+    categories = data["categories"]
+    keyboard = []
+    
+    for cat_key, cat_info in categories.items():
+        present, total = count_category(cat_info)
+        text = f"{cat_info['title']}: {present} / {total}"
+        keyboard.append([InlineKeyboardButton(text=text, callback_data=f"open_cat_{cat_key}")])
+    
+    keyboard.append([InlineKeyboardButton(text="🔄 Оновити дані", callback_data="refresh_main")])
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_category_keyboard(cat_key, cat_info):
+    keyboard = []
+    for name, status in cat_info["employees"].items():
+        icon = "✅" if status else "❌"
+        btn_text = f"{icon} {name}"
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"toggle_{cat_key}_{name}")])
+    
+    keyboard.append([InlineKeyboardButton(text="⬅️ Назад до списку", callback_data="back_to_main")])
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def generate_main_status(data):
+    categories = data["categories"]
+    total_present = 0
+    total_all = 0
+    
+    lines = ["🚨 АКТУАЛЬНИЙ СКЛАД СЛУЖБИ (ЕВАКУАЦІЯ)\n"]
+    for cat_key, cat_info in categories.items():
+        present, total = count_category(cat_info)
+        total_present += present
+        total_all += total
+        lines.append(f"• {cat_info['title']}: {present} / {total}")
+        
+    lines.append(f"\n• 🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total_present} з {total_all} осіб")
+    lines.append(f"\n• 🕒 *Останній оновив:* {data['last_updated_by']}")
+    return "\n".join(lines)
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     data = load_data()
-    # Удаляем старое сообщение пользователя с командой /start для чистоты чата
     try:
         await message.delete()
     except Exception:
         pass
     
     await message.answer(
-        generate_status_text(),
-        reply_markup=get_main_keyboard(data["shift_data"]),
+        generate_main_status(data),
+        reply_markup=get_main_keyboard(data),
         parse_mode="Markdown"
     )
 
-@router.callback_query(F.data.startswith(("inc_", "dec_", "refresh_", "ignore_")))
-async def process_buttons(callback: CallbackQuery):
+@router.callback_query(F.data == "refresh_main")
+async def process_refresh(callback: CallbackQuery):
     data = load_data()
-    shift_data = data["shift_data"]
-    action = callback.data
-    user_name = callback.from_user.full_name
-    if action.startswith("inc_"):
-        key = action.replace("inc_", "")
-        if key in shift_data:
-            shift_data[key] += 1
-            data["last_updated_by"] = user_name
-    elif action.startswith("dec_"):
-        key = action.replace("dec_", "")
-        if key in shift_data and shift_data[key] > 0:
-            shift_data[key] -= 1
-            data["last_updated_by"] = user_name
-    elif action == "refresh_view":
-        data["last_updated_by"] = f"{user_name} (оновлено)"
-
-    save_data(data)
-
     try:
         await callback.message.edit_text(
-            generate_status_text(),
-            reply_markup=get_main_keyboard(shift_data),
+            generate_main_status(data),
+            reply_markup=get_main_keyboard(data),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+    await callback.answer("Дані оновлено!")
+
+@router.callback_query(F.data == "back_to_main")
+async def process_back(callback: CallbackQuery):
+    data = load_data()
+    try:
+        await callback.message.edit_text(
+            generate_main_status(data),
+            reply_markup=get_main_keyboard(data),
             parse_mode="Markdown"
         )
     except Exception:
         pass
     await callback.answer()
+
+@router.callback_query(F.data.startswith("open_cat_"))
+async def process_open_category(callback: CallbackQuery):
+    cat_key = callback.data.replace("open_cat_", "")
+    data = load_data()
+    if cat_key in data["categories"]:
+        cat_info = data["categories"][cat_key]
+        try:
+            await callback.message.edit_text(
+                f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                reply_markup=get_category_keyboard(cat_key, cat_info),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("toggle_"))
+async def process_toggle_employee(callback: CallbackQuery):
+    parts = callback.data.split("_", 2)
+    if len(parts) == 3:
+        cat_key = parts[1]
+        name = parts[2]
+        data = load_data()
+        user_name = callback.from_user.full_name
+        
+        if cat_key in data["categories"] and name in data["categories"][cat_key]["employees"]:
+            current_status = data["categories"][cat_key]["employees"][name]
+            data["categories"][cat_key]["employees"][name] = not current_status
+            data["last_updated_by"] = user_name
+            save_data(data)
+            
+            cat_info = data["categories"][cat_key]
+            try:
+                await callback.message.edit_text(
+                    f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                    reply_markup=get_category_keyboard(cat_key, cat_info),
+                    parse_mode="Markdown"
+                )
+            except Exception:
+                pass
+    await callback.answer("Статус змінено!")
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
