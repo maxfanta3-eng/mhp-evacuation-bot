@@ -207,14 +207,47 @@ def get_main_keyboard(data):
 
 def get_category_keyboard(cat_key, cat_info):
     keyboard = []
-    for name, status in cat_info["employees"].items():
-        # Чітко визначаємо іконку залежно від поточного булевого значення
+    for i, (name, status) in enumerate(cat_info["employees"].items()):
         icon = "✅" if status else "❌"
         btn_text = f"{icon} {name}"
-        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"toggle_{cat_key}_{name}")])
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"tog_{cat_key}_{i}")])
     
     keyboard.append([InlineKeyboardButton(text="⬅️ Назад до списку", callback_data="back_to_main")])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+@router.callback_query(F.data.startswith("tog_"))
+async def process_toggle_employee(callback: CallbackQuery):
+    parts = callback.data.split("_", 2)
+    if len(parts) == 3:
+        cat_key = parts[1]
+        try:
+            emp_index = int(parts[2])
+            data = load_data()
+            user_name = callback.from_user.full_name
+            
+            if cat_key in data["categories"]:
+                employees = data["categories"][cat_key]["employees"]
+                names_list = list(employees.keys())
+                
+                if 0 <= emp_index < len(names_list):
+                    name = names_list[emp_index]
+                    current_status = employees[name]
+                    employees[name] = not current_status
+                    data["last_updated_by"] = user_name
+                    save_data(data)
+                    
+                    cat_info = data["categories"][cat_key]
+                    try:
+                        await callback.message.edit_text(
+                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                            reply_markup=get_category_keyboard(cat_key, cat_info),
+                            parse_mode="Markdown"
+                        )
+                    except Exception:
+                        pass
+        except ValueError:
+            pass
+    await callback.answer("Статус змінено!")
 
 def generate_main_status(data):
     categories = data["categories"]
@@ -288,32 +321,48 @@ async def process_open_category(callback: CallbackQuery):
             pass
     await callback.answer()
 
-@router.callback_query(F.data.startswith("toggle_"))
+def get_category_keyboard(cat_key, cat_info):
+    keyboard = []
+    for i, (name, status) in enumerate(cat_info["employees"].items()):
+        icon = "✅" if status else "❌"
+        btn_text = f"{icon} {name}"
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"tog_{cat_key}_{i}")])
+    
+    keyboard.append([InlineKeyboardButton(text="⬅️ Назад до списку", callback_data="back_to_main")])
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+@router.callback_query(F.data.startswith("tog_"))
 async def process_toggle_employee(callback: CallbackQuery):
     parts = callback.data.split("_", 2)
     if len(parts) == 3:
         cat_key = parts[1]
-        name = parts[2]
-        data = load_data()
-        user_name = callback.from_user.full_name
-        
-        if cat_key in data["categories"] and name in data["categories"][cat_key]["employees"]:
-            # Змінюємо статус на протилежний
-            current_status = data["categories"][cat_key]["employees"][name]
-            data["categories"][cat_key]["employees"][name] = not current_status
-            data["last_updated_by"] = user_name
-            save_data(data)
+        try:
+            emp_index = int(parts[2])
+            data = load_data()
+            user_name = callback.from_user.full_name
             
-            # Отримуємо оновлені дані з пам'яті для побудови свіжої клавіатури
-            cat_info = data["categories"][cat_key]
-            try:
-                await callback.message.edit_text(
-                    f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
-                    reply_markup=get_category_keyboard(cat_key, cat_info),
-                    parse_mode="Markdown"
-                )
-            except Exception:
-                pass
+            if cat_key in data["categories"]:
+                employees = data["categories"][cat_key]["employees"]
+                names_list = list(employees.keys())
+                
+                if 0 <= emp_index < len(names_list):
+                    name = names_list[emp_index]
+                    current_status = employees[name]
+                    employees[name] = not current_status
+                    data["last_updated_by"] = user_name
+                    save_data(data)
+                    
+                    cat_info = data["categories"][cat_key]
+                    try:
+                        await callback.message.edit_text(
+                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                            reply_markup=get_category_keyboard(cat_key, cat_info),
+                            parse_mode="Markdown"
+                        )
+                    except Exception:
+                        pass
+        except ValueError:
+            pass
     await callback.answer("Статус змінено!")
 
 class SimpleHandler(BaseHTTPRequestHandler):
