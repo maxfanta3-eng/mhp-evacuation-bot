@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -7,7 +9,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 # Твой токен от @evacuation_mhp_bot
-TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
+TOKEN = "8985514206:AAGcI2McM4mXggd0JdYi7HUefjvmt7kXVQ"
 
 # Данные о количестве людей по категориям
 shift_data = {
@@ -95,6 +97,16 @@ async def process_count_input(message: Message, state: FSMContext):
     await message.answer("✅ Дані оновлено!", reply_markup=get_main_keyboard())
     await message.answer(generate_status_text(), parse_mode="Markdown")
 
+# Заглушка веб-сервера для Render (чтобы веб-сервис успешно запускался)
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def run_web_server():
+    server = HTTPServer(('0.0.0.0', 10000), SimpleHandler)
+    server.serve_forever()
 async def main():
     logging.basicConfig(level=logging.INFO)
     bot = Bot(token=TOKEN)
@@ -104,5 +116,10 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
+if name == "main":
+    # Запускаем веб-сервер в отдельном потоке, чтобы Render видел активность
+    server_thread = threading.Thread(target=run_web_server, daemon=True)
+    server_thread.start()
+    
+    # Запускаем самого бота
     asyncio.run(main())
