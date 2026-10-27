@@ -243,11 +243,15 @@ async def process_toggle_employee(callback: CallbackQuery):
                             reply_markup=get_category_keyboard(cat_key, cat_info),
                             parse_mode="Markdown"
                         )
-                    except Exception:
-                        pass
-        except ValueError:
+                    except Exception as e:
+                        print(f"Edit error: {e}")
+        except ValueError as e:
+            print(f"Value error: {e}")
             pass
-    await callback.answer("Статус змінено!")
+    try:
+        await callback.answer("Статус змінено!")
+    except Exception:
+        pass
 
 def generate_main_status(data):
     categories = data["categories"]
