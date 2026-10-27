@@ -48,7 +48,7 @@ def get_main_keyboard(shift_data):
                 InlineKeyboardButton(text="➕", callback_data="inc_chief")
             ],
             [
-                InlineKeyboardButton(text=f"🛠 Техесперти: {shift_data['experts']}", callback_data="menu_experts")
+                InlineKeyboardButton(text=f"🛠 Техесперти+слюсаря: {shift_data['experts']}", callback_data="menu_experts")
             ],
             [
                 InlineKeyboardButton(text="➖", callback_data="dec_experts"),
