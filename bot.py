@@ -264,3 +264,73 @@ async def process_back(callback: CallbackQuery):
             reply_markup=get_main_keyboard(data),
             parse_mode="Markdown"
         )
+    except Exception:
+        pass
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("open_cat_"))
+async def process_open_category(callback: CallbackQuery):
+    cat_key = callback.data.replace("open_cat_", "")
+    data = load_data()
+    if cat_key in data["categories"]:
+        cat_info = data["categories"][cat_key]
+        try:
+            await callback.message.edit_text(
+                f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                reply_markup=get_category_keyboard(cat_key, cat_info),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("toggle_"))
+async def process_toggle_employee(callback: CallbackQuery):
+    parts = callback.data.split("_", 2)
+    if len(parts) == 3:
+        cat_key = parts[1]
+        name = parts[2]
+        data = load_data()
+        user_name = callback.from_user.full_name
+        
+        if cat_key in data["categories"] and name in data["categories"][cat_key]["employees"]:
+            current_status = data["categories"][cat_key]["employees"][name]
+            data["categories"][cat_key]["employees"][name] = not current_status
+            data["last_updated_by"] = user_name
+            save_data(data)
+            
+            cat_info = data["categories"][cat_key]
+            try:
+                await callback.message.edit_text(
+                    f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                    reply_markup=get_category_keyboard(cat_key, cat_info),
+                    parse_mode="Markdown"
+                )
+            except Exception:
+                pass
+    await callback.answer("Статус змінено!")
+
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def run_web_server():
+    server = HTTPServer(("0.0.0.0", 10000), SimpleHandler)
+    server.serve_forever()
+
+async def main():
+    logging.basicConfig(level=logging.INFO)
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
+    dp.include_router(router)
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    server_thread = threading.Thread(target=run_web_server, daemon=True)
+    server_thread.start()
+    asyncio.run(main())
