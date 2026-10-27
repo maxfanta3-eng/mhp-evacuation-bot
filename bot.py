@@ -322,7 +322,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Bot is running!")
-        def run_web_server():
+def run_web_server():
     server = HTTPServer(("0.0.0.0", 10000), SimpleHandler)
     server.serve_forever()
 
