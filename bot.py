@@ -47,7 +47,6 @@ DEFAULT_DATA = {
                 "Денисюк С.П.": False,
                 "Луговий С.В.": False,
                 "Мурзак Б.Ю.": False,
-                "Дробчак М.Р.": False
             }
         },
         "warehouse": {
@@ -58,6 +57,7 @@ DEFAULT_DATA = {
                 "Пастушенко В.С.": False,
                 "Рижавський М.П.": False,
                 "Дробчак М.Р.": False
+                "Вабст П.Л.": False,
             }
         },
         "emergency": {
@@ -127,7 +127,6 @@ DEFAULT_DATA = {
                 "Бондаренко М.М.": False,
                 "Боченко О.О.": False,
                 "Білоус М.В.": False,
-                "Вабст П.Л.": False,
                 "Гуцол І.Д.": False,
                 "Головащенко О.М.": False,
                 "Грушовий О.В.": False,
@@ -177,6 +176,10 @@ def load_data():
             data = json.load(f)
             if "categories" not in data:
                 return DEFAULT_DATA
+            # Перевіряємо, чи всі категорії на місці (на випадок старого файлу json)
+            for cat_key in DEFAULT_DATA["categories"]:
+                if cat_key not in data["categories"]:
+                    data["categories"][cat_key] = DEFAULT_DATA["categories"][cat_key]
             return data
     except Exception:
         return DEFAULT_DATA
@@ -205,6 +208,7 @@ def get_main_keyboard(data):
 def get_category_keyboard(cat_key, cat_info):
     keyboard = []
     for name, status in cat_info["employees"].items():
+        # Чітко визначаємо іконку залежно від поточного булевого значення
         icon = "✅" if status else "❌"
         btn_text = f"{icon} {name}"
         keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"toggle_{cat_key}_{name}")])
@@ -294,11 +298,13 @@ async def process_toggle_employee(callback: CallbackQuery):
         user_name = callback.from_user.full_name
         
         if cat_key in data["categories"] and name in data["categories"][cat_key]["employees"]:
+            # Змінюємо статус на протилежний
             current_status = data["categories"][cat_key]["employees"][name]
             data["categories"][cat_key]["employees"][name] = not current_status
             data["last_updated_by"] = user_name
             save_data(data)
             
+            # Отримуємо оновлені дані з пам'яті для побудови свіжої клавіатури
             cat_info = data["categories"][cat_key]
             try:
                 await callback.message.edit_text(
@@ -316,8 +322,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Bot is running!")
-
-def run_web_server():
+        def run_web_server():
     server = HTTPServer(("0.0.0.0", 10000), SimpleHandler)
     server.serve_forever()
 
