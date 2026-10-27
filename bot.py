@@ -11,7 +11,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
 
 router = Router()
-DATA_FILE = "shift_data.json"
+DATA_FILE = "shift_data_v3.json"
 
 DEFAULT_DATA = {
     "categories": {
