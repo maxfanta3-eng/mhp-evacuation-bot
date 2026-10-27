@@ -251,7 +251,7 @@ async def process_toggle_employee(callback: CallbackQuery):
             try:
                 await callback.message.edit_text(
                     f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n⏱ {time.time()}",
-                    reply_markup=get_category_keyboard(cat_key, data["categories"][cat_key]),
+                    reply_markup=get_category_keyboard(cat_key, cat_info),
                     parse_mode="Markdown"
                 )
             except Exception as e:
