@@ -55,7 +55,14 @@ def get_main_keyboard(shift_data):
                 InlineKeyboardButton(text="➕", callback_data="inc_experts")
             ],
             [
-                InlineKeyboardButton(text=f"🤖 Роботизований склад + Аварійники: {shift_data['robots_crew']}", callback_data="menu_robots_crew")
+                InlineKeyboardButton(text=f"🤖 Роботизований склад: {shift_data['robots_crew']}", callback_data="menu_robots_crew")
+            ],
+            [
+                InlineKeyboardButton(text="➖", callback_data="dec_robots_crew"),
+                InlineKeyboardButton(text="➕", callback_data="inc_robots_crew")
+            ],
+            [
+                InlineKeyboardButton(text=f"🤖 Аварійники: {shift_data['robots_crew']}", callback_data="menu_robots_crew")
             ],
             [
                 InlineKeyboardButton(text="➖", callback_data="dec_robots_crew"),
@@ -80,12 +87,13 @@ def generate_status_text():
     total = sum(shift_data.values())
     return (
         f"🚨 АКТУАЛЬНИЙ СКЛАД СЛУЖБИ (ЕВАКУАЦІЯ)\n\n"
-        f"• 👨‍✈️ Керівник служби: {shift_data['chief']}\n"
-        f"• 🛠 Техесперти: {shift_data['experts']}\n"
-        f"• 🤖 Роботизований склад + Чергові аварійники: {shift_data['robots_crew']}\n"
-        f"• 👷‍♂️ Інженер + оператор: {shift_data['eng_op']}\n\n"
-        f"🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total} осіб\n\n"
-        f"✍️ *Останній оновив:* {data['last_updated_by']}"
+        f"• 👤 Керівник служби: {shift_data['chief']}\n"
+        f"• 🛠 Техесперти + слюсаря: {shift_data['experts']}\n"
+        f"• 🤖 Роботизований склад: {shift_data['warehouse']}\n"
+        f"• ⚡ Чергові аварійники: {shift_data['emergency']}\n"
+        f"• 👷 Інженер + оператор: {shift_data['eng_op']}\n\n"
+        f"• 🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total} осіб\n\n"
+        f"• 🕒 *Останній оновив:* {data['last_updated_by']}"
     )
 
 @router.message(Command("start"))
