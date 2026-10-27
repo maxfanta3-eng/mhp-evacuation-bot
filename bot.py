@@ -116,7 +116,7 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-if name == "main":
+if __name__ == "__main__":
     # Запускаем веб-сервер в отдельном потоке, чтобы Render видел активность
     server_thread = threading.Thread(target=run_web_server, daemon=True)
     server_thread.start()
