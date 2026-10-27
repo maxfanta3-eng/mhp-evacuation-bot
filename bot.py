@@ -225,7 +225,6 @@ def get_category_keyboard(cat_key, cat_info):
 
 @router.callback_query(F.data.startswith("tog_"))
 async def process_toggle_employee(callback: CallbackQuery):
-    # Отрезаем префикс "tog_" и отделяем индекс сотрудника справа
     try:
         data_str = callback.data[4:]
         cat_key, emp_index_str = data_str.rsplit("_", 1)
@@ -249,13 +248,10 @@ async def process_toggle_employee(callback: CallbackQuery):
             
             cat_info = data["categories"][cat_key]
             
-            fresh_data = load_data()
-            fresh_cat_info = fresh_data["categories"][cat_key]
-            
             try:
                 await callback.message.edit_text(
                     f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n⏱ {time.time()}",
-                    reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
+                    reply_markup=get_category_keyboard(cat_key, cat_info),
                     parse_mode="Markdown"
                 )
             except Exception as e:
@@ -265,7 +261,6 @@ async def process_toggle_employee(callback: CallbackQuery):
         await callback.answer("Статус змінено!")
     except Exception:
         pass
-
 def generate_main_status(data):
     categories = data["categories"]
     total_present = 0
