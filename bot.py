@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import threading
+import json
+import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
@@ -8,18 +10,33 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-# Твой токен от @evacuation_mhp_bot
 TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
 
-# Данные о количестве людей по категориям
-shift_data = {
-    "chief": 1,
-    "experts": 2,
-    "locksmiths": 4,
-    "operators": 12,
-}
+DATA_FILE = "shift_data.json"
 
-last_updated_by = "Ще не оновлювалось"
+# Функция загрузки данных из файла (чтобы они не стирались при перезагрузках)
+def load_data():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # Базовые значения по умолчанию
+    return {
+        "shift_data": {
+            "chief": 1,
+            "experts": 2,
+            "locksmiths": 4,
+            "operators": 12,
+        },
+        "last_updated_by": "Ще не оновлювалось"
+    }
+
+# Функция сохранения данных в файл
+def save_data(data):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 router = Router()
 
@@ -38,6 +55,8 @@ def get_main_keyboard():
     )
 
 def generate_status_text():
+    data = load_data()
+    shift_data = data["shift_data"]
     total = sum(shift_data.values())
     return (
         f"🚨 АКТУАЛЬНИЙ СКЛАД СЛУЖБИ (ЕВАКУАЦІЯ)\n\n"
@@ -46,7 +65,7 @@ def generate_status_text():
         f"• ⚙️ Слюсарі: {shift_data['locksmiths']}\n"
         f"• 👷‍♂️ Оператори + Інженери: {shift_data['operators']}\n\n"
         f"🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total} осіб\n\n"
-        f"✍️ *Останній оновив:* {last_updated_by}"
+        f"✍️ *Останній оновив:* {data['last_updated_by']}"
     )
 
 @router.message(Command("start"))
@@ -87,17 +106,18 @@ async def process_count_input(message: Message, state: FSMContext):
     count = int(message.text)
     user_data = await state.get_data()
     cat_key = user_data["category"]
-    
-    shift_data[cat_key] = count
-    global last_updated_by
-    last_updated_by = message.from_user.full_name or message.from_user.username or "Співробітник"
+    # Загружаем текущие данные, меняем и сразу сохраняем в файл
+    data = load_data()
+    data["shift_data"][cat_key] = count
+    data["last_updated_by"] = message.from_user.full_name or message.from_user.username or "Співробітник"
+    save_data(data)
     
     await state.clear()
     
     await message.answer("✅ Дані оновлено!", reply_markup=get_main_keyboard())
     await message.answer(generate_status_text(), parse_mode="Markdown")
 
-# Заглушка веб-сервера для Render (чтобы веб-сервис успешно запускался)
+# Веб-сервер для Render
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -107,6 +127,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
 def run_web_server():
     server = HTTPServer(('0.0.0.0', 10000), SimpleHandler)
     server.serve_forever()
+
 async def main():
     logging.basicConfig(level=logging.INFO)
     bot = Bot(token=TOKEN)
@@ -117,9 +138,7 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    # Запускаем веб-сервер в отдельном потоке, чтобы Render видел активность
     server_thread = threading.Thread(target=run_web_server, daemon=True)
     server_thread.start()
     
-    # Запускаем самого бота
     asyncio.run(main())
