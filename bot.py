@@ -364,11 +364,16 @@ async def process_toggle_employee(callback: CallbackQuery):
                     data["last_updated_by"] = user_name
                     save_data(data)
                     
-                    cat_info = data["categories"][cat_key]
+cat_info = data["categories"][cat_key]
+                    
+                    # Перезавантажуємо актуальні дані з файлу перед генерацією клавіатури
+                    fresh_data = load_data()
+                    fresh_cat_info = fresh_data["categories"][cat_key]
+                    
                     try:
                         await callback.message.edit_text(
-                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n   ",
-                            reply_markup=get_category_keyboard(cat_key, cat_info),
+                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
+                            reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
                             parse_mode="Markdown"
                         )
                     except Exception as e:
