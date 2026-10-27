@@ -261,8 +261,6 @@ async def process_toggle_employee(callback: CallbackQuery):
                 reply_markup=get_category_keyboard(cat_key, cat_info),
                 parse_mode="Markdown"
             )
-            except Exception as e:
-                print(f"Edit error: {e}")
                 
     try:
         await callback.answer("Статус змінено!")
