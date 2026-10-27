@@ -348,8 +348,7 @@ async def process_toggle_employee(callback: CallbackQuery):
     parts = callback.data.split("_", 2)
     if len(parts) == 3:
         cat_key = parts[1]
-        try:
-            emp_index = int(parts[2])
+        emp_index = int(parts[2])
         data = load_data()
         user_name = callback.from_user.full_name
         
@@ -366,7 +365,7 @@ async def process_toggle_employee(callback: CallbackQuery):
                 
                 cat_info = data["categories"][cat_key]
                 
-                # Перезавантажуємо актуальні дані з файлу перед генерацією клавіатури
+                # Завантажуємо свіжі дані для генератора клавіатури
                 fresh_data = load_data()
                 fresh_cat_info = fresh_data["categories"][cat_key]
                 
@@ -375,6 +374,14 @@ async def process_toggle_employee(callback: CallbackQuery):
                         f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n⏱ {time.time()}",
                         reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
                         parse_mode="Markdown"
+                    )
+                except Exception as e:
+                    print(f"Edit error: {e}")
+                    
+    try:
+        await callback.answer("Статус змінено!")
+    except Exception:
+        pass
                     )
                 except Exception as e:
                     print(f"Edit error: {e}")
