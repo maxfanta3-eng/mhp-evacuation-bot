@@ -225,37 +225,42 @@ def get_category_keyboard(cat_key, cat_info):
 
 @router.callback_query(F.data.startswith("tog_"))
 async def process_toggle_employee(callback: CallbackQuery):
-    parts = callback.data.split("_", 2)
-    if len(parts) == 3:
-        cat_key = parts[1]
-        try:
-            emp_index = int(parts[2])
-            data = load_data()
-            user_name = callback.from_user.full_name
+    # Отрезаем префикс "tog_" и отделяем индекс сотрудника справа
+    try:
+        data_str = callback.data[4:]
+        cat_key, emp_index_str = data_str.rsplit("_", 1)
+        emp_index = int(emp_index_str)
+    except Exception:
+        return
+
+    data = load_data()
+    user_name = callback.from_user.full_name
+    
+    if cat_key in data["categories"]:
+        employees = data["categories"][cat_key]["employees"]
+        names_list = list(employees.keys())
+        
+        if 0 <= emp_index < len(names_list):
+            name = names_list[emp_index]
+            current_status = employees[name]
+            employees[name] = not current_status
+            data["last_updated_by"] = user_name
+            save_data(data)
             
-            if cat_key in data["categories"]:
-                employees = data["categories"][cat_key]["employees"]
-                names_list = list(employees.keys())
+            cat_info = data["categories"][cat_key]
+            
+            fresh_data = load_data()
+            fresh_cat_info = fresh_data["categories"][cat_key]
+            
+            try:
+                await callback.message.edit_text(
+                    f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):\n⏱ {time.time()}",
+                    reply_markup=get_category_keyboard(cat_key, fresh_cat_info),
+                    parse_mode="Markdown"
+                )
+            except Exception as e:
+                print(f"Edit error: {e}")
                 
-                if 0 <= emp_index < len(names_list):
-                    name = names_list[emp_index]
-                    current_status = employees[name]
-                    employees[name] = not current_status
-                    data["last_updated_by"] = user_name
-                    save_data(data)
-                    
-                    cat_info = data["categories"][cat_key]
-                    try:
-                        await callback.message.edit_text(
-                            f"📋 Список: {cat_info['title']}\nНатисніть на прізвище, щоб змінити статус (✅ / ❌):",
-                            reply_markup=get_category_keyboard(cat_key, cat_info),
-                            parse_mode="Markdown"
-                        )
-                    except Exception as e:
-                        print(f"Edit error: {e}")
-        except ValueError as e:
-            print(f"Value error: {e}")
-            pass
     try:
         await callback.answer("Статус змінено!")
     except Exception:
