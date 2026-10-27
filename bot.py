@@ -9,7 +9,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 # Твой токен от @evacuation_mhp_bot
-TOKEN = "8985514206:AAGcI2McM4mXggd0JdYi7HUefjvmt7kXVQ"
+TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
 
 # Данные о количестве людей по категориям
 shift_data = {
