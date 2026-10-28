@@ -11,12 +11,9 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
 DATA_FILE = "shift_data_v3.json"
 
-# Настройки вебхука для Render
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "https://mhp-evacuation-bot.onrender.com")
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
-
-# Порт берется из окружения Render
 PORT = int(os.environ.get("PORT", 10000))
 
 router = Router()
@@ -150,6 +147,9 @@ DEFAULT_DATA = {
     }
 }
 
+# Дополнительное поле для хранения имени последнего обновившего
+LAST_UPDATE_FILE = "last_update_v3.json"
+
 def load_data():
     if os.path.exists(DATA_FILE):
         try:
@@ -171,12 +171,63 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+def load_last_user():
+    if os.path.exists(LAST_UPDATE_FILE):
+        try:
+            with open(LAST_UPDATE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("user", "Невідомо")
+        except Exception:
+            pass
+    return "Ще ніхто не оновлював"
+
+def save_last_user(name):
+    with open(LAST_UPDATE_FILE, "w", encoding="utf-8") as f:
+        json.dump({"user": name}, f, ensure_ascii=False, indent=4)
+
 if not os.path.exists(DATA_FILE):
     save_data(DEFAULT_DATA)
 
-def get_keyboard(category_name):
+ICONS = {
+    "Керівник служби": "👤",
+    "Техексперти": "🛠",
+    "Слюсаря тех.": "🔧",
+    "Роботизований склад": "🤖",
+    "Чергові аварійники": "⚡",
+    "Інженера+оператори змА": "👷‍♂️",
+    "Інженера+оператори змБ": "👷‍♂️"
+}
+
+def get_main_text_and_keyboard():
+    data = load_data()
+    total_checked = 0
+    total_all = 0
+    
+    keyboard = []
+    for cat_name, emps in data.items():
+        cat_total = len(emps)
+        cat_checked = sum(1 for status in emps.values() if status)
+        total_all += cat_total
+        total_checked += cat_checked
+        
+        icon = ICONS.get(cat_name, "📋")
+        btn_text = f"{icon} {cat_name}: {cat_checked} / {cat_total}"
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"cat:{cat_name}")])
+    
+    keyboard.append([InlineKeyboardButton(text="🔄 Оновити дані", callback_data="refresh_main")])
+    
+    last_user = load_last_user()
+    text = (
+        "🚨 АКТУАЛЬНИЙ СКЛАД СЛУЖБИ (ЕВАКУАЦІЯ)\n\n"
+        f"🔴 ВСЬОГО НА ТЕРИТОРІЇ: {total_checked} з {total_all} осіб\n"
+        f"⏱ Останній оновив: {last_user}\n\n"
+        "Натисніть на відділ, щоб переглянути список:"
+    )
+    return text, InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_category_keyboard(category_name):
     data = load_data()
     category_data = data.get(category_name, {})
+    
     keyboard = []
     if not category_data:
         keyboard.append([InlineKeyboardButton(text="Список порожній", callback_data="none")])
@@ -184,29 +235,28 @@ def get_keyboard(category_name):
         for name, status in category_data.items():
             icon = "✅" if status else "❌"
             btn_text = f"{icon} {name}"
-            callback_data = f"toggle:{category_name}:{name}"
-            keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=callback_data)])
+            keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"toggle:{category_name}:{name}")])
+    
     keyboard.append([InlineKeyboardButton(text="◀️ Назад до списку", callback_data="back_to_main")])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-def get_main_keyboard():
-    data = load_data()
-    keyboard = []
-    for cat_name in data.keys():
-        keyboard.append([InlineKeyboardButton(text=cat_name, callback_data=f"cat:{cat_name}")])
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-@router.message(Command("start"))
+    @router.message(Command("start"))
 async def cmd_start(message: Message):
-    await message.answer(
-        "📋 Актуальний склад служби (евакуація)\nНатисніть на прізвище, щоб змінити статус (✔️/❌):",
-        reply_markup=get_main_keyboard()
-    )
+    text, markup = get_main_text_and_keyboard()
+    await message.answer(text, reply_markup=markup)
+
+@router.callback_query(F.data == "refresh_main")
+async def refresh_main(callback: CallbackQuery):
+    text, markup = get_main_text_and_keyboard()
+    try:
+        await callback.message.edit_text(text, reply_markup=markup)
+    except Exception:
+        pass
+    await callback.answer("Дані оновлено!")
 
 @router.callback_query(F.data.startswith("cat:"))
 async def open_category(callback: CallbackQuery):
     cat_name = callback.data.split(":", 1)[1]
-    keyboard = get_keyboard(cat_name)
+    keyboard = get_category_keyboard(cat_name)
     try:
         await callback.message.edit_text(
             f"📋 Список: {cat_name}\nНатисніть на прізвище, щоб змінити статус (✔️/❌):",
@@ -218,11 +268,9 @@ async def open_category(callback: CallbackQuery):
 
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(callback: CallbackQuery):
+    text, markup = get_main_text_and_keyboard()
     try:
-        await callback.message.edit_text(
-            "📋 Актуальний склад служби (евакуація)\nНатисніть на прізвище, щоб змінити статус (✔️/❌):",
-            reply_markup=get_main_keyboard()
-        )
+        await callback.message.edit_text(text, reply_markup=markup)
     except Exception:
         pass
     await callback.answer()
@@ -233,24 +281,31 @@ async def toggle_status(callback: CallbackQuery):
     if len(parts) < 3:
         await callback.answer()
         return
+    
     cat_name = parts[1]
     emp_name = parts[2]
+    
     data = load_data()
     if cat_name in data and emp_name in data[cat_name]:
         data[cat_name][emp_name] = not data[cat_name][emp_name]
         save_data(data)
-    keyboard = get_keyboard(cat_name)
+        
+        # Фиксируем имя пользователя, который нажал кнопку
+        user = callback.from_user
+        full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+        if not full_name:
+            full_name = user.username or "Користувач"
+        save_last_user(full_name)
+    
+    keyboard = get_category_keyboard(cat_name)
     try:
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     except Exception:
         pass
-    try:
-        await callback.answer("Статус змінено!")
-    except Exception:
-        pass
+    
+    await callback.answer("Статус змінено!")
 
 async def on_startup(bot: Bot):
-    # Устанавливаем вебхук при старте приложения
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
 
 def main():
@@ -261,18 +316,11 @@ def main():
 
     dp.startup.register(on_startup)
 
-    # Создаем aiohttp приложение для работы на Render
     app = web.Application()
-    
-    # Регистрируем обработчик вебхуков aiogram
-    webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-    )
+    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
     setup_application(app, dp, bot=bot)
 
-    # Дополнительный маршрут, чтобы Render видел, что веб-сервис живой
     async def index(request):
         return web.Response(text="Bot is running via Webhooks!")
     app.router.add_get("/", index)
