@@ -2,14 +2,22 @@ import asyncio
 import json
 import logging
 import os
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
-TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
+TOKEN = "8985514206:AAGCI2McxM4Mxggd0JDyI7Huefjvmt7KxVQ"
 DATA_FILE = "shift_data_v3.json"
+
+# Настройки вебхука для Render
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "https://mhp-evacuation-bot.onrender.com")
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
+WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
+
+# Порт берется из окружения Render
+PORT = int(os.environ.get("PORT", 10000))
 
 router = Router()
 
@@ -169,7 +177,6 @@ if not os.path.exists(DATA_FILE):
 def get_keyboard(category_name):
     data = load_data()
     category_data = data.get(category_name, {})
-    
     keyboard = []
     if not category_data:
         keyboard.append([InlineKeyboardButton(text="Список порожній", callback_data="none")])
@@ -179,7 +186,6 @@ def get_keyboard(category_name):
             btn_text = f"{icon} {name}"
             callback_data = f"toggle:{category_name}:{name}"
             keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=callback_data)])
-    
     keyboard.append([InlineKeyboardButton(text="◀️ Назад до списку", callback_data="back_to_main")])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -227,51 +233,51 @@ async def toggle_status(callback: CallbackQuery):
     if len(parts) < 3:
         await callback.answer()
         return
-    
     cat_name = parts[1]
     emp_name = parts[2]
-    
     data = load_data()
     if cat_name in data and emp_name in data[cat_name]:
         data[cat_name][emp_name] = not data[cat_name][emp_name]
         save_data(data)
-    
     keyboard = get_keyboard(cat_name)
     try:
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     except Exception:
         pass
-    
     try:
         await callback.answer("Статус змінено!")
     except Exception:
         pass
-        # Веб-сервер для Web Service на Render
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"Bot is running!")
-    
-    def log_message(self, format, *args):
-        pass
 
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
-    server.serve_forever()
+async def on_startup(bot: Bot):
+    # Устанавливаем вебхук при старте приложения
+    await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
 
-async def main():
+def main():
     logging.basicConfig(level=logging.INFO)
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
     dp.include_router(router)
+
+    dp.startup.register(on_startup)
+
+    # Создаем aiohttp приложение для работы на Render
+    app = web.Application()
     
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    # Регистрируем обработчик вебхуков aiogram
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+
+    # Дополнительный маршрут, чтобы Render видел, что веб-сервис живой
+    async def index(request):
+        return web.Response(text="Bot is running via Webhooks!")
+    app.router.add_get("/", index)
+
+    web.run_app(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
-    server_thread = threading.Thread(target=run_web_server, daemon=True)
-    server_thread.start()
-    asyncio.run(main())
+    main()
