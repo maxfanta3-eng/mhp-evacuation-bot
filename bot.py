@@ -268,7 +268,7 @@ async def main():
     
     await dp.start_polling(bot)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     server_thread = threading.Thread(target=run_web_server, daemon=True)
     server_thread.start()
     asyncio.run(main())
