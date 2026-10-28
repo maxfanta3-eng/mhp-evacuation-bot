@@ -8,7 +8,7 @@ from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-TOKEN = "8985514206:AAGCI2McxM4Mxggd0JDyI7Huefjvmt7KxVQ"
+TOKEN = "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ"
 DATA_FILE = "shift_data_v3.json"
 
 router = Router()
