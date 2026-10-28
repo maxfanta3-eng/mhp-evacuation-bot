@@ -397,15 +397,11 @@ def run_web_server():
     server.serve_forever()
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
-    bot = Bot(token=TOKEN)
-    dp = Dispatcher()
-    dp.include_router(router)
-
+    # Сбрасываем старые зависшие вебхуки и запросы
     await bot.delete_webhook(drop_pending_updates=True)
+    
+    # Запуск поллинга
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
-    server_thread = threading.Thread(target=run_web_server, daemon=True)
-    server_thread.start()
+if name == "main":
     asyncio.run(main())
