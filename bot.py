@@ -239,7 +239,8 @@ def get_category_keyboard(category_name):
     
     keyboard.append([InlineKeyboardButton(text="◀️ Назад до списку", callback_data="back_to_main")])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
-    @router.message(Command("start"))
+
+@router.message(Command("start"))
 async def cmd_start(message: Message):
     text, markup = get_main_text_and_keyboard()
     await message.answer(text, reply_markup=markup)
@@ -290,7 +291,6 @@ async def toggle_status(callback: CallbackQuery):
         data[cat_name][emp_name] = not data[cat_name][emp_name]
         save_data(data)
         
-        # Фиксируем имя пользователя, который нажал кнопку
         user = callback.from_user
         full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
         if not full_name:
