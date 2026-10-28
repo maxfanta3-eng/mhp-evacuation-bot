@@ -402,9 +402,7 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
-    # Теперь бот уже существует, и этот вызов сработает идеально:
-    await bot.delete_webhook(drop_pending_updates=True)
-    await asyncio.sleep(2)  # Пауза, чтобы старый серверный процесс полностью отвалился
+    # Просто чистый запуск без всяких удалений вебхуков, которые сейчас конфликтуют
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
