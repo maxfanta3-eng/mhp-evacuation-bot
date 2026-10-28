@@ -254,7 +254,7 @@ async def toggle_status(callback: CallbackQuery):
         self.wfile.write(b"Bot is running!")
     
     def log_message(self, format, *args):
-        pass  # Отключаем лишний спам в логах от пингов Render
+        pass
 
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
@@ -267,7 +267,6 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
-    # Очищаем старые обновления перед стартом, чтобы избежать конфликтов
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
