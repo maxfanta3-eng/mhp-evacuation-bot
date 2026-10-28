@@ -147,7 +147,8 @@ DEFAULT_DATA = {
     }
 }
 
-# Дополнительное поле для хранения имени последнего обновившего
+CAT_KEYS = list(DEFAULT_DATA.keys())
+
 LAST_UPDATE_FILE = "last_update_v3.json"
 
 def load_data():
@@ -203,7 +204,8 @@ def get_main_text_and_keyboard():
     total_all = 0
     
     keyboard = []
-    for cat_name, emps in data.items():
+    for idx, cat_name in enumerate(CAT_KEYS):
+        emps = data.get(cat_name, {})
         cat_total = len(emps)
         cat_checked = sum(1 for status in emps.values() if status)
         total_all += cat_total
@@ -211,7 +213,8 @@ def get_main_text_and_keyboard():
         
         icon = ICONS.get(cat_name, "📋")
         btn_text = f"{icon} {cat_name}: {cat_checked} / {cat_total}"
-        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"cat:{cat_name}")])
+        # Используем короткий индекс вместо полного названия в callback_data
+        keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"cat:{idx}")])
     
     keyboard.append([InlineKeyboardButton(text="🔄 Оновити дані", callback_data="refresh_main")])
     
@@ -224,9 +227,10 @@ def get_main_text_and_keyboard():
     )
     return text, InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-def get_category_keyboard(category_name):
+def get_category_keyboard(cat_index):
+    cat_name = CAT_KEYS[cat_index]
     data = load_data()
-    category_data = data.get(category_name, {})
+    category_data = data.get(cat_name, {})
     
     keyboard = []
     if not category_data:
@@ -235,7 +239,8 @@ def get_category_keyboard(category_name):
         for name, status in category_data.items():
             icon = "✅" if status else "❌"
             btn_text = f"{icon} {name}"
-            keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"toggle:{category_name}:{name}")])
+            # Короткий формат для безопасного прохождения лимита байтов
+            keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"tgl:{cat_index}:{name}")])
     
     keyboard.append([InlineKeyboardButton(text="◀️ Назад до списку", callback_data="back_to_main")])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -256,8 +261,14 @@ async def refresh_main(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("cat:"))
 async def open_category(callback: CallbackQuery):
-    cat_name = callback.data.split(":", 1)[1]
-    keyboard = get_category_keyboard(cat_name)
+    try:
+        cat_idx = int(callback.data.split(":")[1])
+        cat_name = CAT_KEYS[cat_idx]
+    except Exception:
+        await callback.answer("Помилка відкриття")
+        return
+
+    keyboard = get_category_keyboard(cat_idx)
     try:
         await callback.message.edit_text(
             f"📋 Список: {cat_name}\nНатисніть на прізвище, щоб змінити статус (✔️/❌):",
@@ -276,14 +287,20 @@ async def back_to_main(callback: CallbackQuery):
         pass
     await callback.answer()
 
-@router.callback_query(F.data.startswith("toggle:"))
+@router.callback_query(F.data.startswith("tgl:"))
 async def toggle_status(callback: CallbackQuery):
     parts = callback.data.split(":", 2)
     if len(parts) < 3:
         await callback.answer()
         return
     
-    cat_name = parts[1]
+    try:
+        cat_idx = int(parts[1])
+        cat_name = CAT_KEYS[cat_idx]
+    except Exception:
+        await callback.answer()
+        return
+
     emp_name = parts[2]
     
     data = load_data()
@@ -297,7 +314,7 @@ async def toggle_status(callback: CallbackQuery):
             full_name = user.username or "Користувач"
         save_last_user(full_name)
     
-    keyboard = get_category_keyboard(cat_name)
+    keyboard = get_category_keyboard(cat_idx)
     try:
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     except Exception:
