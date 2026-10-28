@@ -397,10 +397,13 @@ def run_web_server():
     server.serve_forever()
 
 async def main():
-    # Сбрасываем старые зависшие вебхуки и запросы
-    await bot.delete_webhook(drop_pending_updates=True)
+    logging.basicConfig(level=logging.INFO)
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
+    dp.include_router(router)
     
-    # Запуск поллинга
+    # Теперь бот уже существует, и этот вызов сработает идеально:
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
