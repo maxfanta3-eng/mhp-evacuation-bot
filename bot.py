@@ -246,7 +246,8 @@ async def toggle_status(callback: CallbackQuery):
         await callback.answer("Статус змінено!")
     except Exception:
         pass
-        class SimpleHandler(BaseHTTPRequestHandler):
+        # Веб-сервер для Web Service на Render
+class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
