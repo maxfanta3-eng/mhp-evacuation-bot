@@ -8,12 +8,11 @@ from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-TOKEN = os.getenv("BOT_TOKEN", "8985514206:AAGcI2McxM4mXggd0JdYi7HUefjvmt7kXVQ")
+TOKEN = "8985514206:AAGCI2McxM4Mxggd0JDyI7Huefjvmt7KxVQ"
 DATA_FILE = "shift_data_v3.json"
 
 router = Router()
 
-# Полный и точный словарь со всеми вашими категориями и сотрудниками
 DEFAULT_DATA = {
     "Керівник служби": {
         "Островий С.Р.": False,
@@ -148,7 +147,6 @@ def load_data():
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 saved = json.load(f)
-                # Объединяем, чтобы новые ключи/сотрудники не терялись, если файл уже существовал
                 for cat, emps in DEFAULT_DATA.items():
                     if cat not in saved:
                         saved[cat] = emps
@@ -248,16 +246,19 @@ async def toggle_status(callback: CallbackQuery):
         await callback.answer("Статус змінено!")
     except Exception:
         pass
-
-class SimpleHandler(BaseHTTPRequestHandler):
+        class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Bot is running!")
+    
+    def log_message(self, format, *args):
+        pass  # Отключаем лишний спам в логах от пингов Render
 
 def run_web_server():
-    server = HTTPServer(("0.0.0.0", 10000), SimpleHandler)
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
     server.serve_forever()
 
 async def main():
@@ -266,6 +267,8 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
+    # Очищаем старые обновления перед стартом, чтобы избежать конфликтов
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
