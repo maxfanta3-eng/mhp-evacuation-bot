@@ -404,6 +404,7 @@ async def main():
     
     # Теперь бот уже существует, и этот вызов сработает идеально:
     await bot.delete_webhook(drop_pending_updates=True)
+    await asyncio.sleep(2)  # Пауза, чтобы старый серверный процесс полностью отвалился
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
